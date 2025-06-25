@@ -1,0 +1,76 @@
+service: challenge-advisor
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ap-northeast-1
+  environment:
+    CHALLENGES_TABLE: ${self:service}-Challenges
+    SUBMISSIONS_TABLE: ${self:service}-Submissions
+    BEDROCK_MODEL_ID: anthropic.claude-v2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:*:*:table/${self:provider.environment.CHALLENGES_TABLE}
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:*:*:table/${self:provider.environment.SUBMISSIONS_TABLE}
+    - Effect: Allow
+      Action:
+        - "bedrock:*"
+      Resource: "*"
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      migrate: true
+functions:
+  api:
+    handler: backend/main.handler
+    events:
+      - httpApi:
+          path: /submit-code
+          method: post
+resources:
+  Resources:
+    ChallengesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.CHALLENGES_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: challenge_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: challenge_id
+            KeyType: HASH
+    SubmissionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.SUBMISSIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: submission_id
+            AttributeType: S
+          - AttributeName: challenge_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: submission_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: challenge_id-index
+            KeySchema:
+              - AttributeName: challenge_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
