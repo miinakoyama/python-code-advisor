@@ -1,4 +1,4 @@
-# Challenge Advisor
+# Python Code Advisor
 
 Python 課題の自動フィードバックシステムです。ユーザーが提出した Python コードを安全に実行し、AI（Amazon Bedrock）を使用して個別化されたフィードバックを提供します。
 
