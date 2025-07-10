@@ -1,0 +1,24 @@
+{
+  "name": "python-code-advisor-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "serverless offline start",
+    "deploy": "serverless deploy",
+    "install-deps": "npm install"
+  },
+  "keywords": [
+    "python",
+    "code-advisor",
+    "serverless",
+    "fastapi"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "Python Code Advisor Backend with FastAPI and Serverless",
+  "devDependencies": {
+    "serverless-dynamodb": "^0.2.56",
+    "serverless-offline": "^14.4.0"
+  }
+}

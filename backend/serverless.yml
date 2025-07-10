@@ -1,46 +1,72 @@
-service: challenge-advisor
+service: python-code-advisor
 
 provider:
   name: aws
   runtime: python3.11
   region: ap-northeast-1
+  profile: 049381387567_Student
   environment:
     CHALLENGES_TABLE: ${self:service}-Challenges
     SUBMISSIONS_TABLE: ${self:service}-Submissions
-    BEDROCK_MODEL_ID: anthropic.claude-v2
+    BEDROCK_MODEL_ID: apac.anthropic.claude-3-5-sonnet-20240620-v1:0
+    DYNAMODB_ENDPOINT: http://localhost:8001
+    AWS_REGION: ap-northeast-1
+    # ローカル開発用の設定
+    USE_LOCAL_DB: true
+    USE_AWS_BEDROCK: true
   iamRoleStatements:
     - Effect: Allow
       Action:
         - dynamodb:PutItem
         - dynamodb:GetItem
         - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:*:*:table/${self:provider.environment.CHALLENGES_TABLE}
     - Effect: Allow
       Action:
         - dynamodb:PutItem
         - dynamodb:GetItem
         - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:*:*:table/${self:provider.environment.SUBMISSIONS_TABLE}
     - Effect: Allow
       Action:
         - "bedrock:*"
       Resource: "*"
+
 plugins:
   - serverless-offline
-  - serverless-dynamodb-local
+  - serverless-dynamodb
+
 custom:
   dynamodb:
     stages:
       - dev
     start:
+      docker: false
       migrate: true
+      port: 8001
+      inMemory: false
+      heapInitial: 200m
+      heapMax: 1g
+      seed: true
+      dbPath: ./.dynamodb
+      convertEmptyValues: true
+      installPath: .dynamodb
+
 functions:
   api:
-    handler: backend/main.handler
+    handler: main.handler
     events:
       - httpApi:
-          path: /submit-code
-          method: post
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: GET
+
 resources:
   Resources:
     ChallengesTable:
